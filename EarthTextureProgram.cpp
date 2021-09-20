@@ -147,9 +147,9 @@ EarthTextureProgram::EarthTextureProgram() {
 		"	}\n"
 		"	vec3 day = texture(DAYTIME_TEX, texCoord).rgb;\n"
 		"	vec3 night = texture(NIGHT_TEX, texCoord).rgb;\n"
+		"	vec3 albedo = mix(night, day, e);\n"
 		"	float cloud = texture(CLOUD_TEX, texCoord).r;\n"
-		"	vec3 albedo = mix(day, night, e.r);\n"
-		"	fragColor = vec4(mix(albedo, vec3(1.0f), cloud), 1.0f);\n"
+		"	fragColor = vec4(mix(albedo, e, cloud), 1.0f);\n"
 		"}\n"
 	);
 	//As you can see above, adjacent strings in C/C++ are concatenated.
