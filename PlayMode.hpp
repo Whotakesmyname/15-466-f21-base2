@@ -32,6 +32,8 @@ struct PlayMode : Mode {
 	constexpr static glm::vec3 iss_forward_direction = glm::vec3(0.f, 1.f, 0.f);
 	constexpr static float orbit_rotation_increment = 0.021f;
 	constexpr static glm::vec3 orbit_rotation_axis = glm::vec3(0.f, 0.f, 1.f);
+	constexpr static float earth_rotation_increment = 0.002f;
+	constexpr static glm::vec3 earth_rotation_axis = glm::vec3(0.f, 0.f, 1.f);
 	
 	constexpr static float camera_rotation_increment = 0.05f;
 	constexpr static float camera_move_increment = 1.f;

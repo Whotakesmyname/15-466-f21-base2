@@ -38,6 +38,7 @@ Load< EarthTextureProgram > earth_texture_program(LoadTagEarly, []() -> EarthTex
 		earth_tex_file.read(reinterpret_cast<char*>(size), 2*sizeof(uint32_t));
 		tex_data.resize(3*size[0]*size[1]);
 		earth_tex_file.read(&tex_data[0], tex_data.size());
+		std::printf("earth daymap size: %u, %u\n", size[0], size[1]);
 		glBindTexture(GL_TEXTURE_2D, tex[EarthTextureProgram::DAYTIME_TEX]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size[0], size[1], 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data.data());
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -45,10 +46,12 @@ Load< EarthTextureProgram > earth_texture_program(LoadTagEarly, []() -> EarthTex
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		tex_data.clear();
 
 		earth_tex_file.read(reinterpret_cast<char*>(size), 2*sizeof(uint32_t));
 		tex_data.resize(3*size[0]*size[1]);
 		earth_tex_file.read(&tex_data[0], tex_data.size());
+		std::printf("earth nightmap size: %u, %u\n", size[0], size[1]);
 		glBindTexture(GL_TEXTURE_2D, tex[EarthTextureProgram::NIGHT_TEX]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size[0], size[1], 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data.data());
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -56,10 +59,12 @@ Load< EarthTextureProgram > earth_texture_program(LoadTagEarly, []() -> EarthTex
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		tex_data.clear();
 
 		earth_tex_file.read(reinterpret_cast<char*>(size), 2*sizeof(uint32_t));
 		tex_data.resize(size[0]*size[1]);  // 1-channel grayscale data
 		earth_tex_file.read(&tex_data[0], tex_data.size());
+		std::printf("earth cloudmap size: %u, %u\n", size[0], size[1]);
 		glBindTexture(GL_TEXTURE_2D, tex[EarthTextureProgram::CLOUD_TEX]);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size[0], size[1], 0, GL_RED, GL_UNSIGNED_BYTE, tex_data.data());
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -140,10 +145,10 @@ EarthTextureProgram::EarthTextureProgram() {
 		"	} else { //(LIGHT_TYPE == 3) //directional light \n"
 		"		e = max(0.0, dot(n,-LIGHT_DIRECTION)) * LIGHT_ENERGY;\n"
 		"	}\n"
-		"	vec3 day = texture(DAYTIME_TEX, texCoord).rgb * e;\n"
+		"	vec3 day = texture(DAYTIME_TEX, texCoord).rgb;\n"
 		"	vec3 night = texture(NIGHT_TEX, texCoord).rgb;\n"
 		"	float cloud = texture(CLOUD_TEX, texCoord).r;\n"
-		"	vec3 albedo = mix(night, day, e.r);\n"
+		"	vec3 albedo = mix(day, night, e.r);\n"
 		"	fragColor = vec4(mix(albedo, vec3(1.0f), cloud), 1.0f);\n"
 		"}\n"
 	);
@@ -175,9 +180,9 @@ EarthTextureProgram::EarthTextureProgram() {
 	//set TEX to always refer to texture binding zero:
 	glUseProgram(program); //bind program -- glUniform* calls refer to this program now
 
-	glUniform1i(DAYTIME_TEX_sampler2D, earth_texture_program_pipeline.textures[DAYTIME_TEX].texture); //set TEX to sample from GL_TEXTURE0
-	glUniform1i(NIGHT_TEX_sampler2D, earth_texture_program_pipeline.textures[NIGHT_TEX].texture); //set TEX to sample from GL_TEXTURE0
-	glUniform1i(CLOUD_TEX_sampler2D, earth_texture_program_pipeline.textures[CLOUD_TEX].texture); //set TEX to sample from GL_TEXTURE0
+	glUniform1i(DAYTIME_TEX_sampler2D, 0);
+	glUniform1i(NIGHT_TEX_sampler2D, 1);
+	glUniform1i(CLOUD_TEX_sampler2D, 2);
 
 	glUseProgram(0); //unbind program -- glUniform* calls refer to ??? now
 }

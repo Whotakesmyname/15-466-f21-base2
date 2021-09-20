@@ -29,6 +29,7 @@ Load< Scene > ntfc_scene(LoadTagDefault, []() -> Scene const * {
 		scene.drawables.emplace_back(transform);
 		Scene::Drawable &drawable = scene.drawables.back();
 
+		// earth rendering uses a different fragment shader with 3 textures
 		if (mesh_name == "Earth") {
 			drawable.pipeline = earth_texture_program_pipeline;
 			drawable.pipeline.vao = ntfc_meshes_for_earth_texture_program;
@@ -141,8 +142,9 @@ void PlayMode::update(float elapsed) {
 	//update space station rotation
 	iss->rotation *= glm::angleAxis(iss_rotation_increment * elapsed, iss_forward_direction);
 	//update space station orbit
-	// orbit_plane->rotation *= glm::angleAxis(orbit_rotation_increment * elapsed, orbit_rotation_axis);
-	//TODO: update earth rotation
+	orbit_plane->rotation *= glm::angleAxis(orbit_rotation_increment * elapsed, orbit_rotation_axis);
+	//update earth rotation
+	earth->rotation *= glm::angleAxis(earth_rotation_increment * elapsed, earth_rotation_axis);
 
 	//move camera:
 	{
