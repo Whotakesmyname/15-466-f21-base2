@@ -71,67 +71,84 @@ PlayMode::~PlayMode() {
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
 
 	if (evt.type == SDL_KEYDOWN) {
-		if (evt.key.keysym.sym == SDLK_ESCAPE) {
-			SDL_SetRelativeMouseMode(SDL_FALSE);
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_a) {
-			left.downs += 1;
-			left.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			right.downs += 1;
-			right.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			up.downs += 1;
-			up.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			down.downs += 1;
-			down.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			rleft.downs += 1;
-			rleft.pressed = true;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			rright.downs += 1;
-			rright.pressed = true;
+		switch (evt.key.keysym.sym) {
+			case SDLK_a: {
+				left.downs += 1;
+				left.pressed = true;
+				return true;
+			}
+			case SDLK_d: {
+				right.downs += 1;
+				right.pressed = true;
+				return true;
+			}
+			case SDLK_w: {
+				forward.downs += 1;
+				forward.pressed = true;
+				return true;
+			}
+			case SDLK_s: {
+				backward.downs += 1;
+				backward.pressed = true;
+				return true;
+			}
+			case SDLK_q: {
+				rleft.downs += 1;
+				rleft.pressed = true;
+				return true;
+			}
+			case SDLK_e: {
+				rright.downs += 1;
+				rright.pressed = true;
+				return true;
+			}
+			case SDLK_RCTRL:
+			case SDLK_LCTRL: {
+				down.downs += 1;
+				down.pressed = true;
+				return true;
+			}
+			case SDLK_SPACE: {
+				up.downs += 1;
+				up.pressed = true;
+				return true;
+			}
 		}
 	} else if (evt.type == SDL_KEYUP) {
-		if (evt.key.keysym.sym == SDLK_a) {
-			left.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
-			right.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			up.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			down.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_q) {
-			rleft.pressed = false;
-		} else if (evt.key.keysym.sym == SDLK_e) {
-			rright.pressed = false;
-		}
-	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
-			SDL_SetRelativeMouseMode(SDL_TRUE);
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEMOTION) {
-		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
-			glm::vec2 motion = glm::vec2(
-				evt.motion.xrel / float(window_size.y),
-				-evt.motion.yrel / float(window_size.y)
-			);
-			// camera->transform->rotation = glm::normalize(
-			// 	camera->transform->rotation
-			// 	* glm::angleAxis(-motion.x * camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
-			// 	* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
-			// );
-			return true;
+		switch (evt.key.keysym.sym) {
+			case SDLK_a: {
+				left.pressed = false;
+				return true;
+			}
+			case SDLK_d: {
+				right.pressed = false;
+				return true;
+			}
+			case SDLK_w: {
+				forward.pressed = false;
+				return true;
+			}
+			case SDLK_s: {
+				backward.pressed = false;
+				return true;
+			}
+			case SDLK_q: {
+				rleft.pressed = false;
+				return true;
+			}
+			case SDLK_e: {
+				rright.pressed = false;
+				return true;
+			}
+			case SDLK_RCTRL:
+			case SDLK_LCTRL: {
+				down.pressed = false;
+				return true;
+			}
+			case SDLK_SPACE: {
+				up.pressed = false;
+				return true;
+			}
 		}
 	}
 
@@ -150,26 +167,32 @@ void PlayMode::update(float elapsed) {
 	{
 
 		//combine inputs into a move:
-		constexpr float PlayerSpeed = 1.0f;
-		glm::vec2 move = glm::vec2(0.0f);
-		if (left.pressed && !right.pressed) move.x =-camera_move_increment;
-		if (!left.pressed && right.pressed) move.x = camera_move_increment;
-		if (down.pressed && !up.pressed) move.y =-camera_move_increment;
-		if (!down.pressed && up.pressed) move.y = camera_move_increment;
+		if (left.pressed && !right.pressed) camera_move_speed_multiplier.x -= 1;
+		if (!left.pressed && right.pressed) camera_move_speed_multiplier.x += 1;
+		if (forward.pressed && !backward.pressed) camera_move_speed_multiplier.y += 1;
+		if (!forward.pressed && backward.pressed) camera_move_speed_multiplier.y -= 1;
+		if (down.pressed && !up.pressed) camera_move_speed_multiplier.z -= 1;
+		if (!down.pressed && up.pressed) camera_move_speed_multiplier.z += 1;
 		if (rleft.pressed && !rright.pressed) camera_rotation_speed_multiplier += 1;
 		if (!rleft.pressed && rright.pressed) camera_rotation_speed_multiplier -= 1;
 
-		//make it so that moving diagonally doesn't go faster:
-		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
-
 		glm::mat4x3 frame = camera->transform->make_local_to_parent();
 		glm::vec3 right = frame[0];
-		//glm::vec3 up = frame[1];
+		glm::vec3 up = frame[1];
 		glm::vec3 forward = -frame[2];
 
-		camera->transform->position += move.x * right + move.y * forward;
+		camera->transform->position += glm::mat3x3(right, forward, up) * camera_move_speed_multiplier * camera_move_increment * elapsed;
 		camera->transform->rotation *= glm::angleAxis(camera_rotation_speed_multiplier * camera_rotation_increment * elapsed, camera_forward_direction);
 
+		//decide if docking successful
+		//rotation match
+		if (abs(camera_rotation_increment*camera_rotation_speed_multiplier + iss_rotation_increment) <= SUCCESS_ROTATION_DELTA) {
+			//iss and camera belong to the same direct parent
+			std::printf("distance: %f\n", glm::length(iss->position - cam->position));
+			if (glm::length(iss->position - cam->position) <= SUCCESS_DISTANCE) {
+				succeed = true;
+			}
+		}
 	}
 
 	//reset button press counters:
@@ -218,13 +241,15 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			0.0f, 0.0f, 0.0f, 1.0f
 		));
 
+		const std::string& text = succeed ? text_success : text_note;
+
 		constexpr float H = 0.09f;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
+		lines.draw_text(text,
 			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
 		float ofs = 2.0f / drawable_size.y;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
+		lines.draw_text(text,
 			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
 			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
 			glm::u8vec4(0xff, 0xff, 0xff, 0x00));

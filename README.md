@@ -2,7 +2,7 @@
 
 Author: Harrison Chen
 
-Design:
+Design: 800km above our head, a space station is spinning out of control while orbiting Earth in 27500 km/h. Dock your spacecraft to it first, so that we can stabilize it. **NO TIME FOR CAUTION**.
 
 Screen Shot:
 
@@ -10,11 +10,16 @@ Screen Shot:
 
 How Your Asset Pipeline Works:
 
-(TODO: describe the steps in your asset pipeline, from source files to tiles/backgrounds/whatever you upload to the PPU466.)
+1. models and scene data are read by the provided python scripts from Blender project file to .pnct and .scene
+2. textures are processed by `pack_textures.py` from .jpg to uncompressed binary data (`NTFC.tex`)
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
+- W/S controls moving forward/backward
+- A/D moves left/right
+- Q/E rotates counterclockwise/clockwise
+- Space/Ctrl moves up/down
+- Your goal is getting close to the space station while maintain relatively still to it
 
 Sources: 
 - Earth-related realistic textures come from [Solar Textures](https://www.solarsystemscope.com/textures/) under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), based on NASA elevation and imagery data [in public domain](https://www.nasa.gov/multimedia/guidelines/index.html).
