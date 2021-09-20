@@ -117,6 +117,7 @@ GAME_NAMES =
 	PlayMode
 	main
 	LitColorTextureProgram
+	EarthTextureProgram
 	#ColorTextureProgram #not used right now, but you might want it
 	;
 

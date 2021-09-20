@@ -1,6 +1,7 @@
 #include "PlayMode.hpp"
 
 #include "LitColorTextureProgram.hpp"
+#include "EarthTextureProgram.hpp"
 
 #include "DrawLines.hpp"
 #include "Mesh.hpp"
@@ -13,9 +14,11 @@
 #include <random>
 
 GLuint ntfc_meshes_for_lit_color_texture_program = 0;
+GLuint ntfc_meshes_for_earth_texture_program = 0;
 Load< MeshBuffer > ntfc_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 	MeshBuffer const *ret = new MeshBuffer(data_path("NTFC.pnct"));
 	ntfc_meshes_for_lit_color_texture_program = ret->make_vao_for_program(lit_color_texture_program->program);
+	ntfc_meshes_for_earth_texture_program = ret->make_vao_for_program(earth_texture_program->program);
 	return ret;
 });
 
@@ -26,9 +29,13 @@ Load< Scene > ntfc_scene(LoadTagDefault, []() -> Scene const * {
 		scene.drawables.emplace_back(transform);
 		Scene::Drawable &drawable = scene.drawables.back();
 
-		drawable.pipeline = lit_color_texture_program_pipeline;
-
-		drawable.pipeline.vao = ntfc_meshes_for_lit_color_texture_program;
+		if (mesh_name == "Earth") {
+			drawable.pipeline = earth_texture_program_pipeline;
+			drawable.pipeline.vao = ntfc_meshes_for_earth_texture_program;
+		} else {
+			drawable.pipeline = lit_color_texture_program_pipeline;
+			drawable.pipeline.vao = ntfc_meshes_for_lit_color_texture_program;
+		}
 		drawable.pipeline.type = mesh.type;
 		drawable.pipeline.start = mesh.start;
 		drawable.pipeline.count = mesh.count;
@@ -131,23 +138,11 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 }
 
 void PlayMode::update(float elapsed) {
-
-	//slowly rotates through [0,1):
-	// wobble += elapsed / 10.0f;
-	// wobble -= std::floor(wobble);
-
-	// hip->rotation = hip_base_rotation * glm::angleAxis(
-	// 	glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
-	// 	glm::vec3(0.0f, 1.0f, 0.0f)
-	// );
-	// upper_leg->rotation = upper_leg_base_rotation * glm::angleAxis(
-	// 	glm::radians(7.0f * std::sin(wobble * 2.0f * 2.0f * float(M_PI))),
-	// 	glm::vec3(0.0f, 0.0f, 1.0f)
-	// );
-	// lower_leg->rotation = lower_leg_base_rotation * glm::angleAxis(
-	// 	glm::radians(10.0f * std::sin(wobble * 3.0f * 2.0f * float(M_PI))),
-	// 	glm::vec3(0.0f, 0.0f, 1.0f)
-	// );
+	//update space station rotation
+	iss->rotation *= glm::angleAxis(iss_rotation_increment * elapsed, iss_forward_direction);
+	//update space station orbit
+	// orbit_plane->rotation *= glm::angleAxis(orbit_rotation_increment * elapsed, orbit_rotation_axis);
+	//TODO: update earth rotation
 
 	//move camera:
 	{
@@ -173,8 +168,6 @@ void PlayMode::update(float elapsed) {
 		camera->transform->position += move.x * right + move.y * forward;
 		camera->transform->rotation *= glm::angleAxis(camera_rotation_speed_multiplier * camera_rotation_increment * elapsed, camera_forward_direction);
 
-		//update space station rotation
-		iss->rotation *= glm::angleAxis(iss_rotation_increment * elapsed, iss_forward_direction);
 	}
 
 	//reset button press counters:
@@ -191,9 +184,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//set up light type and position for lit_color_texture_program:
 	// TODO: consider using the Light(s) in the scene to do this
 	glUseProgram(lit_color_texture_program->program);
-	glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 1);
-	glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 0.0f,-1.0f)));
-	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
+	glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 3);
+	glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 1.0f, 0.f)));
+	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.f, 1.f, 1.f)));
 	glUseProgram(0);
 
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
