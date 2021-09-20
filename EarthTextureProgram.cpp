@@ -1,5 +1,7 @@
 #include "EarthTextureProgram.hpp"
 
+#include <fstream>
+
 #include "gl_compile_program.hpp"
 #include "gl_errors.hpp"
 #include "load_save_png.hpp"
@@ -25,44 +27,53 @@ Load< EarthTextureProgram > earth_texture_program(LoadTagEarly, []() -> EarthTex
 	earth_texture_program_pipeline.LIGHT_CUTOFF_float = ret->LIGHT_CUTOFF_float;
 	*/
 
-	//load daytime, night, cloud textures:
-	GLuint tex[EarthTextureProgram::TEXTURE_COUNT];
-	glGenTextures(EarthTextureProgram::TEXTURE_COUNT, tex);
-	std::vector< glm::u8vec4 > tex_data;
-	glm::uvec2 size;
+	{
+		//load daytime, night, cloud textures from improvised binary format:
+		GLuint tex[EarthTextureProgram::TEXTURE_COUNT];
+		glGenTextures(EarthTextureProgram::TEXTURE_COUNT, tex);
+		std::vector< char > tex_data;
+		uint32_t size[2];
+		std::ifstream earth_tex_file(data_path("earth.tex"), std::ios::binary);
 
-	load_png(data_path("earth_daytime.png"), &size, &tex_data, OriginLocation::LowerLeftOrigin);
-	glBindTexture(GL_TEXTURE_2D, tex[EarthTextureProgram::DAYTIME_TEX]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data.data());
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		earth_tex_file.read(reinterpret_cast<char*>(size), 2*sizeof(uint32_t));
+		tex_data.resize(3*size[0]*size[1]);
+		earth_tex_file.read(&tex_data[0], tex_data.size());
+		glBindTexture(GL_TEXTURE_2D, tex[EarthTextureProgram::DAYTIME_TEX]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size[0], size[1], 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data.data());
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-	load_png(data_path("earth_night.png"), &size, &tex_data, OriginLocation::LowerLeftOrigin);
-	glBindTexture(GL_TEXTURE_2D, tex[EarthTextureProgram::NIGHT_TEX]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data.data());
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		earth_tex_file.read(reinterpret_cast<char*>(size), 2*sizeof(uint32_t));
+		tex_data.resize(3*size[0]*size[1]);
+		earth_tex_file.read(&tex_data[0], tex_data.size());
+		glBindTexture(GL_TEXTURE_2D, tex[EarthTextureProgram::NIGHT_TEX]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size[0], size[1], 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data.data());
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
-	load_png(data_path("earth_cloud.png"), &size, &tex_data, OriginLocation::LowerLeftOrigin);
-	glBindTexture(GL_TEXTURE_2D, tex[EarthTextureProgram::CLOUD_TEX]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RED, GL_UNSIGNED_BYTE, tex_data.data());
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	
-	glBindTexture(GL_TEXTURE_2D, 0);
+		earth_tex_file.read(reinterpret_cast<char*>(size), 2*sizeof(uint32_t));
+		tex_data.resize(size[0]*size[1]);  // 1-channel grayscale data
+		earth_tex_file.read(&tex_data[0], tex_data.size());
+		glBindTexture(GL_TEXTURE_2D, tex[EarthTextureProgram::CLOUD_TEX]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size[0], size[1], 0, GL_RED, GL_UNSIGNED_BYTE, tex_data.data());
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-	for (size_t i = 0; i < EarthTextureProgram::TEXTURE_COUNT; ++i) {
-		earth_texture_program_pipeline.textures[i].texture = tex[i];
-		earth_texture_program_pipeline.textures[i].target = GL_TEXTURE_2D;
+		for (size_t i = 0; i < EarthTextureProgram::TEXTURE_COUNT; ++i) {
+			earth_texture_program_pipeline.textures[i].texture = tex[i];
+			earth_texture_program_pipeline.textures[i].target = GL_TEXTURE_2D;
+		}
 	}
 
 	return ret;
