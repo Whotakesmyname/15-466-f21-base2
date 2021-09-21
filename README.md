@@ -10,8 +10,11 @@ Screen Shot:
 
 How Your Asset Pipeline Works:
 
-1. models and scene data are read by the provided python scripts from Blender project file to .pnct and .scene
-2. textures are processed by `pack_textures.py` from .jpg to uncompressed binary data (`NTFC.tex`)
+1. Models and scene data are read by the provided python scripts from Blender project file to .pnct and .scene.
+2. Textures are processed by `pack_textures.py` from .jpg to uncompressed binary data (`NTFC.tex`).
+3. Meshes and scene are loaded in a normal manner. One another shader is written to utilize the textures to render Earth in a dynamic alternation of day and night
+
+**NOTE:** To successfully execute the modified makefile, you will need Python modules **numpy** and **Pillow**, which have been listed in `scenes/requirements.txt`.
 
 How To Play:
 
