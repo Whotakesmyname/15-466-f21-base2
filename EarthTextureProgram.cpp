@@ -33,7 +33,7 @@ Load< EarthTextureProgram > earth_texture_program(LoadTagEarly, []() -> EarthTex
 		glGenTextures(EarthTextureProgram::TEXTURE_COUNT, tex);
 		std::vector< char > tex_data;
 		uint32_t size[2];
-		std::ifstream earth_tex_file(data_path("earth.tex"), std::ios::binary);
+		std::ifstream earth_tex_file(data_path("NTFC.tex"), std::ios::binary);
 
 		earth_tex_file.read(reinterpret_cast<char*>(size), 2*sizeof(uint32_t));
 		tex_data.resize(3*size[0]*size[1]);
